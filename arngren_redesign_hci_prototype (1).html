@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ARNGREN - Protótipo IHC & Gestalt Responsivo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    screens: {
+                        'xs': '480px'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 4px; }
+        .toast-slide { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* Safe area spacing for modern smartphones with bottom indicator bars */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200 min-h-full flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- TOP ACCESSIBILITY BAR (WCAG & HCI Accessibility) -->
+    <div class="bg-brand-800 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 flex justify-between items-center border-b border-brand-900 select-none">
+        <div class="flex items-center space-x-3 sm:space-x-4">
+            <span class="inline-flex items-center gap-1.5 font-medium"><i class="fa-solid fa-shield-halved text-amber-400"></i> Compra 100% Segura</span>
+            <span class="hidden md:inline-flex items-center gap-1.5 text-brand-200"><i class="fa-solid fa-truck-fast"></i> Entrega para todo o Brasil</span>
+        </div>
+        <!-- Accessibility Controls -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button id="contrast-toggle" title="Alternar Modo Escuro/Claro" class="min-h-[32px] px-2 rounded-md hover:bg-brand-700 active:bg-brand-900 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white transition-colors">
+                <i class="fa-solid fa-circle-half-stroke text-amber-300"></i>
+                <span class="hidden sm:inline font-medium">Tema</span>
+            </button>
+            <span class="text-brand-400">|</span>
+            <div class="flex items-center gap-1">
+                <button onclick="adjustFontSize(1)" title="Aumentar Fonte" class="min-w-[28px] min-h-[28px] font-bold rounded hover:bg-brand-700 active:bg-brand-900 flex items-center justify-center focus:outline-none focus:ring-1 focus:ring-white">A+</button>
+                <button onclick="adjustFontSize(-1)" title="Diminuir Fonte" class="min-w-[28px] min-h-[28px] font-bold rounded hover:bg-brand-700 active:bg-brand-900 flex items-center justify-center focus:outline-none focus:ring-1 focus:ring-white">A-</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN STICKY HEADER -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
+            
+            <!-- MOBILE MENU TRIGGER (HAMBURGER) -->
+            <button onclick="toggleMobileMenu()" class="lg:hidden p-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Abrir Menu">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+
+            <!-- LOGO (Clean & Legible HCI Design) -->
+            <a href="#" onclick="filterCategory('Todas')" class="flex flex-col group focus:outline-none focus:ring-2 focus:ring-brand-500 rounded-lg p-1">
+                <span class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wider text-brand-600 dark:text-blue-400 group-hover:opacity-90 leading-none">
+                    ARNGREN<span class="text-amber-500">.net</span>
+                </span>
+                <span class="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-widest uppercase mt-0.5">Tecnologia & Modelismo</span>
+            </a>
+
+            <!-- DESKTOP SEARCH BAR -->
+            <div class="relative flex-1 max-w-xl mx-2 hidden md:block">
+                <div class="relative flex items-center">
+                    <input type="text" id="search-input" placeholder="O que você procura? (ex: Drone, Scooter, Go-Kart)..." 
+                        class="w-full pl-10 pr-10 py-2.5 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-gray-800 transition-all text-sm shadow-inner"
+                        onkeyup="handleSearch(event)">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-gray-400"></i>
+                    <button id="clear-search" onclick="clearSearch()" class="hidden absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS (HCI Feedback & Affordance) -->
+            <div class="flex items-center space-x-1 sm:space-x-2">
+                <!-- Mobile Search Toggle Button -->
+                <button onclick="toggleMobileSearchModal()" class="md:hidden p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Pesquisar">
+                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                </button>
+
+                <!-- Favorites Button -->
+                <button onclick="toggleFavoritesModal()" class="relative p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors" title="Favoritos" aria-label="Favoritos">
+                    <i class="fa-regular fa-heart text-xl"></i>
+                    <span id="fav-badge" class="hidden absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">0</span>
+                </button>
+
+                <!-- Shopping Cart Button -->
+                <button onclick="toggleCartDrawer()" class="relative p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors" title="Carrinho de Compras" aria-label="Carrinho">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                    <span id="cart-badge" class="hidden absolute top-1 right-1 bg-brand-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">0</span>
+                </button>
+
+                <!-- User Profile -->
+                <button onclick="showToast('Área do Cliente acessada (Simulação)', 'info')" class="hidden sm:flex items-center p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Perfil do usuário">
+                    <div class="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-300 flex items-center justify-center font-semibold text-sm border border-brand-200 dark:border-brand-700">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- CATEGORIES HORIZONTAL SCROLLBAR (DESKTOP & TABLET) -->
+        <nav class="hidden lg:block bg-gray-100 dark:bg-gray-900/90 border-t border-gray-200 dark:border-gray-700/80 overflow-x-auto custom-scrollbar">
+            <div class="max-w-7xl mx-auto px-4 flex items-center space-x-1 py-2 text-sm font-medium whitespace-nowrap">
+                <button onclick="filterCategory('Todas')" class="cat-btn active-cat flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all text-brand-600 dark:text-blue-400 font-semibold" data-cat="Todas">
+                    <i class="fa-solid fa-border-all"></i> Todas
+                </button>
+                <button onclick="filterCategory('Veículos Elétricos')" class="cat-btn flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800" data-cat="Veículos Elétricos">
+                    <i class="fa-solid fa-car-side"></i> Veículos Elétricos
+                </button>
+                <button onclick="filterCategory('Aeromodelismo')" class="cat-btn flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800" data-cat="Aeromodelismo">
+                    <i class="fa-solid fa-plane"></i> Aeromodelismo
+                </button>
+                <button onclick="filterCategory('Drones')" class="cat-btn flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800" data-cat="Drones">
+                    <i class="fa-solid fa-fan"></i> Drones & Câmeras
+                </button>
+                <button onclick="filterCategory('Gadgets & Eletrônicos')" class="cat-btn flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800" data-cat="Gadgets & Eletrônicos">
+                    <i class="fa-solid fa-microchip"></i> Gadgets & Solar
+                </button>
+                <button onclick="filterCategory('Ferramentas')" class="cat-btn flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800" data-cat="Ferramentas">
+                    <i class="fa-solid fa-wrench"></i> Ferramentas
+                </button>
+                <button onclick="filterCategory('Brinquedos RC')" class="cat-btn flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800" data-cat="Brinquedos RC">
+                    <i class="fa-solid fa-gamepad"></i> Brinquedos RC
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MOBILE OFF-CANVAS NAVIGATION DRAWER (Ergonomia Mobile) -->
+    <div id="mobile-menu-drawer" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+        <div onclick="toggleMobileMenu()" class="absolute inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"></div>
+        <div class="pointer-events-none fixed inset-y-0 left-0 flex max-w-full pr-10">
+            <div class="pointer-events-auto w-screen max-w-xs bg-white dark:bg-gray-800 shadow-2xl flex flex-col justify-between">
+                <div>
+                    <!-- Drawer Header -->
+                    <div class="p-4 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <span class="text-lg font-extrabold text-brand-600 dark:text-blue-400">Categorias</span>
+                        <button onclick="toggleMobileMenu()" class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Categories Mobile Links -->
+                    <div class="p-3 space-y-1">
+                        <button onclick="filterCategory('Todas'); toggleMobileMenu();" class="w-full text-left px-4 py-3 rounded-xl font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3">
+                            <i class="fa-solid fa-border-all text-brand-500 w-5"></i> Todas as Categorias
+                        </button>
+                        <button onclick="filterCategory('Veículos Elétricos'); toggleMobileMenu();" class="w-full text-left px-4 py-3 rounded-xl font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3">
+                            <i class="fa-solid fa-car-side text-brand-500 w-5"></i> Veículos Elétricos
+                        </button>
+                        <button onclick="filterCategory('Aeromodelismo'); toggleMobileMenu();" class="w-full text-left px-4 py-3 rounded-xl font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3">
+                            <i class="fa-solid fa-plane text-brand-500 w-5"></i> Aeromodelismo
+                        </button>
+                        <button onclick="filterCategory('Drones'); toggleMobileMenu();" class="w-full text-left px-4 py-3 rounded-xl font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3">
+                            <i class="fa-solid fa-fan text-brand-500 w-5"></i> Drones & Câmeras
+                        </button>
+                        <button onclick="filterCategory('Gadgets & Eletrônicos'); toggleMobileMenu();" class="w-full text-left px-4 py-3 rounded-xl font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3">
+                            <i class="fa-solid fa-microchip text-brand-500 w-5"></i> Gadgets & Solar
+                        </button>
+                        <button onclick="filterCategory('Ferramentas'); toggleMobileMenu();" class="w-full text-left px-4 py-3 rounded-xl font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3">
+                            <i class="fa-solid fa-wrench text-brand-500 w-5"></i> Ferramentas
+                        </button>
+                        <button onclick="filterCategory('Brinquedos RC'); toggleMobileMenu();" class="w-full text-left px-4 py-3 rounded-xl font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3">
+                            <i class="fa-solid fa-gamepad text-brand-500 w-5"></i> Brinquedos RC
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 text-center">
+                    <p>ARNGREN IHC Prototype</p>
+                    <p class="mt-1">100% Adaptado para Dispositivos Móveis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE SEARCH MODAL -->
+    <div id="mobile-search-modal" class="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm hidden p-4 flex flex-col justify-start">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-xl w-full max-w-lg mx-auto mt-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white">Pesquisar Produtos</h3>
+                <button onclick="toggleMobileSearchModal()" class="text-gray-400 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="relative flex items-center">
+                <input type="text" id="mobile-search-input" placeholder="Digite nome ou categoria..." 
+                    class="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    onkeyup="handleMobileSearch(event)">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-gray-400"></i>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-2 text-center">Resultados atualizados automaticamente na tela.</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 md:pb-8">
+
+        <!-- HERO BANNER (Gestalt Figura-Fundo & Ergonomia Visual) -->
+        <section class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg mb-6 sm:mb-8 bg-gradient-to-r from-gray-900 via-brand-950 to-brand-900 text-white border border-gray-800">
+            <div class="relative z-10 p-5 sm:p-8 lg:p-12 max-w-2xl">
+                <span class="inline-block px-3 py-1 bg-amber-500 text-gray-950 font-bold text-[10px] sm:text-xs uppercase tracking-wider rounded-full mb-3 shadow-sm">
+                    Revolução no Modelismo & Mobilidade
+                </span>
+                <h1 class="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight mb-3">
+                    O Arngren clássico, <span class="text-brand-400">redesenhado</span> para telas de todos os tamanhos.
+                </h1>
+                <p class="text-gray-300 text-xs sm:text-sm lg:text-base mb-5 leading-relaxed">
+                    Navegação fluida no smartphone ou computador, com organização clara, acessibilidade ajustável e sem poluição visual.
+                </p>
+                <div class="flex flex-wrap gap-2.5">
+                    <button onclick="filterCategory('Veículos Elétricos')" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 sm:px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2 text-xs sm:text-sm min-h-[44px]">
+                        Ver Veículos Elétricos <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button onclick="filterCategory('Drones')" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold px-4 sm:px-5 py-2.5 rounded-xl transition-all backdrop-blur-sm active:scale-95 text-xs sm:text-sm min-h-[44px]">
+                        Drones em Destaque
+                    </button>
+                </div>
+            </div>
+            <div class="absolute right-0 bottom-0 top-0 w-1/2 opacity-25 hidden md:block bg-center bg-cover pointer-events-none" 
+                 style="background-image: url('https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80');">
+            </div>
+        </section>
+
+        <!-- CATEGORY QUICK CHIPS FOR MOBILE (< lg screens) -->
+        <div class="lg:hidden mb-5 overflow-x-auto custom-scrollbar -mx-3 px-3">
+            <div class="flex items-center space-x-2 whitespace-nowrap pb-1">
+                <button onclick="filterCategory('Todas')" class="cat-chip text-xs px-3.5 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-medium active:bg-brand-50" data-cat="Todas">Todas</button>
+                <button onclick="filterCategory('Veículos Elétricos')" class="cat-chip text-xs px-3.5 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-medium active:bg-brand-50" data-cat="Veículos Elétricos">Veículos Elétricos</button>
+                <button onclick="filterCategory('Drones')" class="cat-chip text-xs px-3.5 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-medium active:bg-brand-50" data-cat="Drones">Drones</button>
+                <button onclick="filterCategory('Aeromodelismo')" class="cat-chip text-xs px-3.5 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-medium active:bg-brand-50" data-cat="Aeromodelismo">Aeromodelismo</button>
+                <button onclick="filterCategory('Ferramentas')" class="cat-chip text-xs px-3.5 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-medium active:bg-brand-50" data-cat="Ferramentas">Ferramentas</button>
+            </div>
+        </div>
+
+        <!-- FILTERS & SORTING CONTROLS -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div>
+                <h2 id="current-category-title" class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Todos os Produtos</h2>
+                <p id="products-count" class="text-xs text-gray-500 dark:text-gray-400">Carregando catálogo...</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                <!-- Price Filter -->
+                <select id="price-filter" onchange="applyFilters()" class="flex-1 sm:flex-initial bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[40px]">
+                    <option value="all">Faixa de Preço (Todas)</option>
+                    <option value="under200">Até R$ 200</option>
+                    <option value="200to1000">R$ 200 a R$ 1.000</option>
+                    <option value="over1000">Acima de R$ 1.000</option>
+                </select>
+
+                <!-- Sorting -->
+                <select id="sort-order" onchange="applyFilters()" class="flex-1 sm:flex-initial bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[40px]">
+                    <option value="default">Relevância</option>
+                    <option value="price-low">Menor Preço</option>
+                    <option value="price-high">Maior Preço</option>
+                    <option value="rating">Melhor Avaliação</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- FULLY RESPONSIVE PRODUCT GRID -->
+        <!-- Grid Breakpoints: 1 col (Mobile) -> 2 cols (Small Tablet) -> 3 cols (Desktop) -> 4 cols (Large Screens) -->
+        <div id="product-grid" class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <!-- Product Cards injected via JavaScript -->
+        </div>
+
+        <!-- EMPTY STATE FEEDBACK -->
+        <div id="empty-state" class="hidden text-center py-16 px-4">
+            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <h3 class="text-base font-bold text-gray-800 dark:text-gray-200">Nenhum produto encontrado</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto mt-1 mb-4">Tente utilizar outros termos de pesquisa ou redefinir os filtros aplicados.</p>
+            <button onclick="resetFilters()" class="text-xs font-semibold bg-brand-600 text-white px-4 py-2.5 rounded-xl hover:bg-brand-700 transition-colors min-h-[44px]">
+                Redefinir Filtros
+            </button>
+        </div>
+    </main>
+
+    <!-- MOBILE BOTTOM FIXED NAVIGATION BAR (Ergonomia IHC para polegar) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-lg pb-safe">
+        <div class="grid grid-cols-4 h-14">
+            <button onclick="filterCategory('Todas'); window.scrollTo({top: 0, behavior: 'smooth'});" class="flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-blue-400 active:bg-gray-100 dark:active:bg-gray-700">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] font-medium mt-0.5">Início</span>
+            </button>
+            <button onclick="toggleMobileMenu()" class="flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-blue-400 active:bg-gray-100 dark:active:bg-gray-700">
+                <i class="fa-solid fa-list text-lg"></i>
+                <span class="text-[10px] font-medium mt-0.5">Categorias</span>
+            </button>
+            <button onclick="toggleMobileSearchModal()" class="flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-blue-400 active:bg-gray-100 dark:active:bg-gray-700">
+                <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                <span class="text-[10px] font-medium mt-0.5">Buscar</span>
+            </button>
+            <button onclick="toggleCartDrawer()" class="relative flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-blue-400 active:bg-gray-100 dark:active:bg-gray-700">
+                <i class="fa-solid fa-cart-shopping text-lg"></i>
+                <span class="text-[10px] font-medium mt-0.5">Carrinho</span>
+                <span id="mobile-cart-badge" class="hidden absolute top-1 right-5 bg-brand-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-300 text-xs border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+                <span class="text-xl font-extrabold text-white tracking-wider">ARNGREN<span class="text-amber-500">.net</span></span>
+                <p class="mt-2 text-gray-400 leading-relaxed">
+                    Protótipo acadêmico reformulado seguindo todos os princípios de Interação Humano-Computador (IHC) e Leis da Gestalt.
+                </p>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-3 uppercase tracking-wider">Categorias</h4>
+                <ul class="space-y-2 text-gray-400">
+                    <li><a href="#" onclick="filterCategory('Veículos Elétricos')" class="hover:text-white transition-colors">Veículos Elétricos</a></li>
+                    <li><a href="#" onclick="filterCategory('Drones')" class="hover:text-white transition-colors">Drones & Câmeras</a></li>
+                    <li><a href="#" onclick="filterCategory('Aeromodelismo')" class="hover:text-white transition-colors">Aeromodelismo</a></li>
+                    <li><a href="#" onclick="filterCategory('Ferramentas')" class="hover:text-white transition-colors">Ferramentas & Kits</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-3 uppercase tracking-wider">Acessibilidade e IHC</h4>
+                <ul class="space-y-2 text-gray-400">
+                    <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> Usabilidade & Ergonomia</li>
+                    <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> Contraste & Tipografia WCAG</li>
+                    <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> Leis da Gestalt Aplicadas</li>
+                    <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 100% Mobile Responsive</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-3 uppercase tracking-wider">Pagamento Simulado</h4>
+                <div class="flex items-center gap-3 text-2xl text-gray-400 mb-3">
+                    <i class="fa-brands fa-cc-visa" title="Visa"></i>
+                    <i class="fa-brands fa-cc-mastercard" title="Mastercard"></i>
+                    <i class="fa-solid fa-barcode" title="Boleto"></i>
+                    <i class="fa-solid fa-qrcode" title="PIX"></i>
+                </div>
+                <p class="text-[11px] text-gray-500">Nenhum dado financeiro real é processado nesta demonstração.</p>
+            </div>
+        </div>
+        <div class="bg-gray-950 py-4 text-center text-[11px] text-gray-500 border-t border-gray-800">
+            &copy; 2026 ARNGREN Redesign Protótipo IHC & Responsividade.
+        </div>
+    </footer>
+
+    <!-- SHOPPING CART SIDEBAR / DRAWER -->
+    <div id="cart-drawer" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+        <div onclick="toggleCartDrawer()" class="absolute inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"></div>
+        <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-6">
+            <div class="pointer-events-auto w-screen max-w-md bg-white dark:bg-gray-800 shadow-2xl flex flex-col justify-between">
+                
+                <!-- Drawer Header -->
+                <div class="p-4 sm:p-5 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping text-brand-600"></i> Seu Carrinho
+                    </h3>
+                    <button onclick="toggleCartDrawer()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cart Items List -->
+                <div id="cart-items" class="flex-1 overflow-y-auto p-4 sm:p-5 divide-y divide-gray-200 dark:divide-gray-700 custom-scrollbar">
+                    <!-- Dynamic cart list via JS -->
+                </div>
+
+                <!-- Cart Summary Footer -->
+                <div class="p-4 sm:p-5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 pb-safe">
+                    <div class="flex justify-between text-base font-bold text-gray-900 dark:text-white mb-2">
+                        <span>Total:</span>
+                        <span id="cart-total" class="text-brand-600 dark:text-blue-400">R$ 0,00</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-4">Frete calculado no próximo passo.</p>
+                    
+                    <button onclick="checkoutSimulate()" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold py-3.5 px-4 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2 text-sm min-h-[48px]">
+                        <span>Finalizar Compra</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCT QUICK VIEW MODAL -->
+    <div id="product-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-3 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div onclick="closeProductModal()" class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-200 dark:border-gray-700">
+                <div class="relative p-5 sm:p-6" id="modal-content">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAVORITES MODAL -->
+    <div id="fav-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-3 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div onclick="toggleFavoritesModal()" class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full p-5 sm:p-6">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-heart text-red-500"></i> Seus Favoritos
+                    </h3>
+                    <button onclick="toggleFavoritesModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                <div id="fav-items-list" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
+                    <!-- Dynamic favorites -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-16 sm:bottom-6 right-3 sm:right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- APPLICATION LOGIC -->
+    <script>
+        // PRODUCT CATALOG DATA
+        const products = [
+            {
+                id: 1,
+                name: "Minicarro Elétrico 24V Arngren Off-Road",
+                category: "Veículos Elétricos",
+                price: 1899.00,
+                rating: 4.8,
+                reviews: 32,
+                image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=600&q=80",
+                description: "Mini veículo elétrico quadriciclo com bateria recarregável de 24V, controle remoto e tração integral para vários terrenos.",
+                inStock: true
+            },
+            {
+                id: 2,
+                name: "Scooter Elétrica Dobrável Urban Pro 350W",
+                category: "Veículos Elétricos",
+                price: 1250.00,
+                rating: 4.6,
+                reviews: 45,
+                image: "https://images.unsplash.com/photo-1597047084897-51e81819a499?auto=format&fit=crop&w=600&q=80",
+                description: "Patinete elétrico urbano dobrável com chassi de alumínio, autonomia de 25km e velocidade de até 25 km/h.",
+                inStock: true
+            },
+            {
+                id: 3,
+                name: "Drone Quadcopter FPV GPS Câmera 4K",
+                category: "Drones",
+                price: 890.00,
+                rating: 4.9,
+                reviews: 88,
+                image: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?auto=format&fit=crop&w=600&q=80",
+                description: "Drone dobrável com transmissão de vídeo ao vivo, retorno automático por GPS e giroscópio de 6 eixos.",
+                inStock: true
+            },
+            {
+                id: 4,
+                name: "Helicóptero RC Coaxial 3.5 Canais",
+                category: "Brinquedos RC",
+                price: 249.90,
+                rating: 4.3,
+                reviews: 19,
+                image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80",
+                description: "Helicóptero de controle remoto ideal para iniciantes com carcaça metálica resistente a quedas.",
+                inStock: true
+            },
+            {
+                id: 5,
+                name: "Kit Mini Ferramentas de Precisão 45 em 1",
+                category: "Ferramentas",
+                price: 89.90,
+                rating: 4.7,
+                reviews: 64,
+                image: "https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c?auto=format&fit=crop&w=600&q=80",
+                description: "Estojo completo de ponteiras magnéticas para manutenção de aeromodelos, drones e eletrônicos.",
+                inStock: true
+            },
+            {
+                id: 6,
+                name: "Go-Kart Elétrico Sprint 350W",
+                category: "Veículos Elétricos",
+                price: 2490.00,
+                rating: 4.9,
+                reviews: 12,
+                image: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80",
+                description: "Mini kart elétrico com assento ajustável, freios a disco e seletor de limite de velocidade.",
+                inStock: true
+            },
+            {
+                id: 7,
+                name: "Painel Solar Dobrável Portátil 100W",
+                category: "Gadgets & Eletrônicos",
+                price: 450.00,
+                rating: 4.6,
+                reviews: 29,
+                image: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=600&q=80",
+                description: "Carregador solar portátil com saídas USB-C e DC para recarga de baterias RC, telemóveis e estações de energia.",
+                inStock: true
+            },
+            {
+                id: 8,
+                name: "Avião Caça Jet RC Brushless EPP",
+                category: "Aeromodelismo",
+                price: 599.00,
+                rating: 4.8,
+                reviews: 41,
+                image: "https://images.unsplash.com/photo-1519074069444-1ba4eae287b6?auto=format&fit=crop&w=600&q=80",
+                description: "Aeromodelo caça leve e ultra resistente a impactos com giroscópio de estabilização inteligente.",
+                inStock: true
+            }
+        ];
+
+        // STATE MANAGEMENT
+        let currentProducts = [...products];
+        let cart = [];
+        let favorites = [];
+        let selectedCategory = 'Todas';
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            renderProducts(products);
+            setupThemeToggle();
+        });
+
+        // RENDER PRODUCTS GRID (Gestalt Proximity, Similarity & Closure)
+        function renderProducts(items) {
+            const grid = document.getElementById('product-grid');
+            const emptyState = document.getElementById('empty-state');
+            const countLabel = document.getElementById('products-count');
+
+            grid.innerHTML = '';
+            countLabel.textContent = `Exibindo ${items.length} produto(s)`;
+
+            if (items.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            grid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            items.forEach(product => {
+                const isFav = favorites.includes(product.id);
+                const card = document.createElement('article');
+                card.className = "bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group";
+
+                card.innerHTML = `
+                    <div class="relative aspect-[4/3] w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        <img src="${product.image}" alt="${product.name}" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                             loading="lazy"
+                             onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=Imagem+Indisponivel'">
+                        
+                        <!-- Category Badge -->
+                        <span class="absolute top-2.5 left-2.5 bg-white/90 dark:bg-gray-900/90 text-gray-800 dark:text-gray-200 text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs backdrop-blur-xs">
+                            ${product.category}
+                        </span>
+
+                        <!-- Favorite Button (Min 44x44px target) -->
+                        <button onclick="toggleFavorite(${product.id}, event)" 
+                                class="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 flex items-center justify-center shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}"
+                                aria-label="Favoritar">
+                            <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'} text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <!-- Star Ratings -->
+                            <div class="flex items-center space-x-1 text-amber-400 text-[11px] mb-1">
+                                ${generateStars(product.rating)}
+                                <span class="text-gray-400 dark:text-gray-500 text-[10px] ml-1">(${product.reviews})</span>
+                            </div>
+
+                            <h3 class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm leading-snug line-clamp-2 hover:text-brand-600 dark:hover:text-blue-400 transition-colors cursor-pointer" onclick="openProductModal(${product.id})">
+                                ${product.name}
+                            </h3>
+                            
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 line-clamp-2 leading-relaxed">
+                                ${product.description}
+                            </p>
+                        </div>
+
+                        <div class="mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-gray-400 block -mb-0.5">Preço</span>
+                                <span class="text-base sm:text-lg font-extrabold text-brand-600 dark:text-blue-400">
+                                    R$ ${product.price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-1">
+                                <button onclick="openProductModal(${product.id})" 
+                                        class="p-2 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center" 
+                                        title="Detalhes">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                                <button onclick="addToCart(${product.id})" 
+                                        class="bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-medium px-3 py-2 rounded-xl text-xs transition-colors shadow-sm flex items-center gap-1 min-h-[38px] focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                        title="Adicionar ao carrinho">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                    <span class="hidden sm:inline font-semibold">Adicionar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function generateStars(rating) {
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= Math.floor(rating)) {
+                    starsHtml += '<i class="fa-solid fa-star"></i>';
+                } else if (i - rating < 1) {
+                    starsHtml += '<i class="fa-solid fa-star-half-stroke"></i>';
+                } else {
+                    starsHtml += '<i class="fa-regular fa-star text-gray-300 dark:text-gray-600"></i>';
+                }
+            }
+            return starsHtml;
+        }
+
+        // FILTER BY CATEGORY
+        function filterCategory(catName) {
+            selectedCategory = catName;
+            
+            // Update desktop active category buttons
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === catName) {
+                    btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-brand-600', 'dark:text-blue-400', 'font-semibold', 'shadow-xs');
+                } else {
+                    btn.classList.remove('bg-white', 'dark:bg-gray-800', 'text-brand-600', 'dark:text-blue-400', 'font-semibold', 'shadow-xs');
+                }
+            });
+
+            // Update mobile active chips
+            document.querySelectorAll('.cat-chip').forEach(chip => {
+                if (chip.dataset.cat === catName) {
+                    chip.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+                    chip.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-800', 'dark:text-gray-200');
+                } else {
+                    chip.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+                    chip.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-800', 'dark:text-gray-200');
+                }
+            });
+
+            document.getElementById('current-category-title').textContent = catName === 'Todas' ? 'Todos os Produtos' : catName;
+            applyFilters();
+            showToast(`Categoria: ${catName}`, 'info');
+        }
+
+        // SEARCH & FILTERS
+        function handleSearch(event) {
+            const query = event.target.value.toLowerCase().trim();
+            const clearBtn = document.getElementById('clear-search');
+            if (query.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+            applyFilters();
+        }
+
+        function handleMobileSearch(event) {
+            const query = event.target.value.toLowerCase().trim();
+            document.getElementById('search-input').value = query;
+            applyFilters();
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search').classList.add('hidden');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            const priceVal = document.getElementById('price-filter').value;
+            const sortVal = document.getElementById('sort-order').value;
+
+            let filtered = products.filter(p => {
+                const matchesCat = selectedCategory === 'Todas' || p.category === selectedCategory;
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery) || p.description.toLowerCase().includes(searchQuery);
+                
+                let matchesPrice = true;
+                if (priceVal === 'under200') matchesPrice = p.price <= 200;
+                else if (priceVal === '200to1000') matchesPrice = p.price > 200 && p.price <= 1000;
+                else if (priceVal === 'over1000') matchesPrice = p.price > 1000;
+
+                return matchesCat && matchesSearch && matchesPrice;
+            });
+
+            if (sortVal === 'price-low') filtered.sort((a, b) => a.price - b.price);
+            else if (sortVal === 'price-high') filtered.sort((a, b) => b.price - a.price);
+            else if (sortVal === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+
+            currentProducts = filtered;
+            renderProducts(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('price-filter').value = 'all';
+            document.getElementById('sort-order').value = 'default';
+            filterCategory('Todas');
+        }
+
+        // FAVORITES
+        function toggleFavorite(id, event) {
+            if (event) event.stopPropagation();
+            const index = favorites.indexOf(id);
+            const product = products.find(p => p.id === id);
+
+            if (index > -1) {
+                favorites.splice(index, 1);
+                showToast(`"${product.name}" removido dos favoritos.`, 'warning');
+            } else {
+                favorites.push(id);
+                showToast(`"${product.name}" adicionado aos favoritos!`, 'success');
+            }
+
+            updateFavBadge();
+            renderProducts(currentProducts);
+            renderFavoritesList();
+        }
+
+        function updateFavBadge() {
+            const badge = document.getElementById('fav-badge');
+            if (favorites.length > 0) {
+                badge.textContent = favorites.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function toggleFavoritesModal() {
+            const modal = document.getElementById('fav-modal');
+            modal.classList.toggle('hidden');
+            renderFavoritesList();
+        }
+
+        function renderFavoritesList() {
+            const container = document.getElementById('fav-items-list');
+            if (favorites.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-500 text-center py-6">Você não possui itens favoritados.</p>`;
+                return;
+            }
+
+            container.innerHTML = favorites.map(id => {
+                const item = products.find(p => p.id === id);
+                return `
+                    <div class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg">
+                            <div>
+                                <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 line-clamp-1">${item.name}</h4>
+                                <span class="text-xs font-semibold text-brand-600 dark:text-blue-400">R$ ${item.price.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="addToCart(${item.id})" class="text-xs bg-brand-600 text-white p-2 rounded-lg hover:bg-brand-700 min-w-[36px] min-h-[36px] flex items-center justify-center">
+                                <i class="fa-solid fa-cart-plus"></i>
+                            </button>
+                            <button onclick="toggleFavorite(${item.id})" class="text-xs text-red-500 hover:text-red-700 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // SHOPPING CART
+        function addToCart(id, qty = 1) {
+            const product = products.find(p => p.id === id);
+            const existing = cart.find(item => item.id === id);
+
+            if (existing) {
+                existing.quantity += qty;
+            } else {
+                cart.push({ ...product, quantity: qty });
+            }
+
+            updateCartUI();
+            showToast(`"${product.name}" adicionado ao carrinho!`, 'success');
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+            showToast('Item removido do carrinho.', 'warning');
+        }
+
+        function updateQuantity(id, change) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) removeFromCart(id);
+                else updateCartUI();
+            }
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const mobileBadge = document.getElementById('mobile-cart-badge');
+            const totalCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+            
+            [badge, mobileBadge].forEach(b => {
+                if (b) {
+                    if (totalCount > 0) {
+                        b.textContent = totalCount;
+                        b.classList.remove('hidden');
+                    } else {
+                        b.classList.add('hidden');
+                    }
+                }
+            });
+
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fa-solid fa-basket-shopping text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Seu carrinho está vazio.</p>
+                    </div>
+                `;
+                cartTotal.textContent = 'R$ 0,00';
+                return;
+            }
+
+            let total = 0;
+            cartItemsContainer.innerHTML = cart.map(item => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                return `
+                    <div class="py-3 flex items-center gap-3">
+                        <img src="${item.image}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="flex-1">
+                            <h4 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-1">${item.name}</h4>
+                            <span class="text-xs text-brand-600 dark:text-blue-400 font-semibold">R$ ${item.price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg">
+                                    <button onclick="updateQuantity(${item.id}, -1)" class="px-2.5 py-1 text-xs text-gray-600 dark:text-gray-300 active:bg-gray-200 min-w-[32px]">-</button>
+                                    <span class="px-2 text-xs font-bold text-gray-800 dark:text-gray-200">${item.quantity}</span>
+                                    <button onclick="updateQuantity(${item.id}, 1)" class="px-2.5 py-1 text-xs text-gray-600 dark:text-gray-300 active:bg-gray-200 min-w-[32px]">+</button>
+                                </div>
+                                <button onclick="removeFromCart(${item.id})" class="text-xs text-red-500 hover:text-red-700 ml-auto p-1">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            cartTotal.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        function toggleCartDrawer() {
+            document.getElementById('cart-drawer').classList.toggle('hidden');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu-drawer').classList.toggle('hidden');
+        }
+
+        function toggleMobileSearchModal() {
+            document.getElementById('mobile-search-modal').classList.toggle('hidden');
+        }
+
+        function checkoutSimulate() {
+            if (cart.length === 0) {
+                showToast('Adicione produtos ao carrinho antes de finalizar!', 'warning');
+                return;
+            }
+            showToast('🎉 Pedido efetuado no protótipo!', 'success');
+            cart = [];
+            updateCartUI();
+            toggleCartDrawer();
+        }
+
+        // QUICK VIEW MODAL
+        function openProductModal(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            const modal = document.getElementById('product-modal');
+            const content = document.getElementById('modal-content');
+
+            content.innerHTML = `
+                <button onclick="closeProductModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-center">
+                    <div class="rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 aspect-video sm:aspect-square">
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <span class="inline-block px-2.5 py-0.5 bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300 text-[10px] font-bold rounded-md mb-2">
+                            ${product.category}
+                        </span>
+                        <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 leading-snug">${product.name}</h2>
+                        
+                        <div class="flex items-center space-x-1 text-amber-400 text-xs mb-3">
+                            ${generateStars(product.rating)}
+                            <span class="text-gray-500 text-[11px] ml-1">(${product.reviews} avaliações)</span>
+                        </div>
+
+                        <p class="text-xs text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                            ${product.description}
+                        </p>
+
+                        <div class="text-xl sm:text-2xl font-extrabold text-brand-600 dark:text-blue-400 mb-5">
+                            R$ ${product.price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="addToCart(${product.id}); closeProductModal();" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 min-h-[44px]">
+                                <i class="fa-solid fa-cart-plus"></i> Adicionar
+                            </button>
+                            <button onclick="toggleFavorite(${product.id}, event)" class="p-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                                <i class="${favorites.includes(product.id) ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'} text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        // TOAST FEEDBACK SYSTEM
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const bgColors = {
+                success: 'bg-emerald-600 text-white',
+                warning: 'bg-amber-500 text-gray-950',
+                info: 'bg-brand-600 text-white'
+            };
+
+            const icons = {
+                success: 'fa-circle-check',
+                warning: 'fa-triangle-exclamation',
+                info: 'fa-circle-info'
+            };
+
+            toast.className = `toast-slide p-3 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2.5 ${bgColors[type]} pointer-events-auto max-w-xs`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icons[type]} text-sm"></i>
+                <span class="flex-1">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(8px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ACCESSIBILITY & THEME CONTROLS
+        function setupThemeToggle() {
+            const btn = document.getElementById('contrast-toggle');
+            btn.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                showToast(`Modo ${isDark ? 'Escuro' : 'Claro'} ativado`, 'info');
+            });
+        }
+
+        let currentZoom = 100;
+        function adjustFontSize(delta) {
+            currentZoom += delta * 5;
+            if (currentZoom < 90) currentZoom = 90;
+            if (currentZoom > 115) currentZoom = 115;
+            document.body.style.fontSize = `${currentZoom}%`;
+            showToast(`Texto: ${currentZoom}%`, 'info');
+        }
+    </script>
+</body>
+</html>
